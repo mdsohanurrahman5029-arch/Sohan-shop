@@ -1,0 +1,398 @@
+{
+  "entities": {
+    "Product": {
+      "title": "Product",
+      "description": "E-commerce product item managed by admin and displayed on the customer storefront when active.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique product identifier",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": {
+          "type": "string",
+          "description": "Product name",
+          "minLength": 2,
+          "maxLength": 200
+        },
+        "subtitle": {
+          "type": "string",
+          "description": "Short product subtitle",
+          "maxLength": 500
+        },
+        "description": {
+          "type": "string",
+          "description": "Detailed product description",
+          "minLength": 2,
+          "maxLength": 4000
+        },
+        "category": {
+          "type": "string",
+          "description": "Product category",
+          "maxLength": 100
+        },
+        "regularPrice": {
+          "type": "number",
+          "description": "Regular price in BDT"
+        },
+        "salePrice": {
+          "type": "number",
+          "description": "Sale/offer price in BDT"
+        },
+        "discountPercentage": {
+          "type": "number",
+          "description": "Discount percentage (0-100)"
+        },
+        "images": {
+          "type": "array",
+          "description": "List of product image URLs (up to 10 images)"
+        },
+        "thumbnail": {
+          "type": "string",
+          "description": "Main thumbnail URL (first image)",
+          "maxLength": 2000
+        },
+        "sizes": {
+          "type": "array",
+          "description": "Available sizes (up to 10 sizes)"
+        },
+        "colors": {
+          "type": "array",
+          "description": "Available colors (up to 10 colors)"
+        },
+        "colorImages": {
+          "type": "object",
+          "description": "Optional mapping from color name to the primary product image URL for that color variant"
+        },
+        "stockQuantity": {
+          "type": "number",
+          "description": "Available stock count (non-negative integer)"
+        },
+        "stock": {
+          "type": "boolean",
+          "description": "Whether product has stock > 0"
+        },
+        "features": {
+          "type": "array",
+          "description": "Key product features (up to 10 bullet points)"
+        },
+        "active": {
+          "type": "boolean",
+          "description": "Product status: true = Active (visible to customers), false = Inactive"
+        },
+        "position": {
+          "type": "number",
+          "description": "Display sort order position"
+        },
+        "insideDhakaDelivery": {
+          "type": "number",
+          "description": "Inside Dhaka delivery fee in BDT"
+        },
+        "outsideDhakaDelivery": {
+          "type": "number",
+          "description": "Outside Dhaka delivery fee in BDT"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of creation"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last update"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "description",
+        "category",
+        "regularPrice",
+        "salePrice",
+        "discountPercentage",
+        "images",
+        "thumbnail",
+        "sizes",
+        "colors",
+        "stockQuantity",
+        "stock",
+        "features",
+        "active",
+        "position",
+        "insideDhakaDelivery",
+        "outsideDhakaDelivery",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Customer order with product details, delivery address, and payment verification state.",
+      "type": "object",
+      "properties": {
+        "orderId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "customerName": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 150
+        },
+        "mobileNumber": {
+          "type": "string",
+          "minLength": 11,
+          "maxLength": 20
+        },
+        "district": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 100
+        },
+        "fullAddress": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 1000
+        },
+        "note": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "productId": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "productName": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "unitPrice": {
+          "type": "number"
+        },
+        "size": {
+          "type": "string",
+          "maxLength": 30
+        },
+        "color": {
+          "type": "string",
+          "maxLength": 60
+        },
+        "quantity": {
+          "type": "number"
+        },
+        "deliveryLocation": {
+          "type": "string",
+          "enum": ["inside_dhaka", "outside_dhaka"]
+        },
+        "deliveryTypeLabel": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "subtotal": {
+          "type": "number"
+        },
+        "deliveryCharge": {
+          "type": "number"
+        },
+        "grandTotal": {
+          "type": "number"
+        },
+        "onlinePaid": {
+          "type": "number"
+        },
+        "codAmount": {
+          "type": "number"
+        },
+        "paymentMethod": {
+          "type": "string",
+          "enum": ["bKash", "Nagad"]
+        },
+        "paymentAccountNumber": {
+          "type": "string",
+          "maxLength": 30
+        },
+        "senderMobile": {
+          "type": "string",
+          "minLength": 11,
+          "maxLength": 20
+        },
+        "transactionId": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 64
+        },
+        "paymentStatus": {
+          "type": "string",
+          "enum": ["PAYMENT VERIFICATION PENDING", "PAID", "REJECTED"]
+        },
+        "orderStatus": {
+          "type": "string",
+          "enum": ["PENDING PAYMENT VERIFICATION", "CONFIRMED", "PAYMENT REJECTED", "DELIVERED", "CANCELLED"]
+        },
+        "stockDeducted": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "orderId",
+        "customerName",
+        "mobileNumber",
+        "district",
+        "fullAddress",
+        "productId",
+        "productName",
+        "unitPrice",
+        "size",
+        "color",
+        "quantity",
+        "deliveryLocation",
+        "deliveryTypeLabel",
+        "subtotal",
+        "deliveryCharge",
+        "grandTotal",
+        "onlinePaid",
+        "codAmount",
+        "paymentMethod",
+        "paymentAccountNumber",
+        "senderMobile",
+        "transactionId",
+        "paymentStatus",
+        "orderStatus",
+        "stockDeducted",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "PaymentRecord": {
+      "title": "PaymentRecord",
+      "description": "Advance delivery charge payment submission record linked to an order.",
+      "type": "object",
+      "properties": {
+        "paymentId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "orderId": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "paymentMethod": {
+          "type": "string",
+          "enum": ["bKash", "Nagad"]
+        },
+        "receiverAccount": {
+          "type": "string",
+          "maxLength": 30
+        },
+        "senderMobile": {
+          "type": "string",
+          "minLength": 11,
+          "maxLength": 20
+        },
+        "transactionId": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 64
+        },
+        "amount": {
+          "type": "number"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["PAYMENT VERIFICATION PENDING", "PAID", "REJECTED"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "paymentId",
+        "orderId",
+        "paymentMethod",
+        "receiverAccount",
+        "senderMobile",
+        "transactionId",
+        "amount",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "AdminUser": {
+      "title": "AdminUser",
+      "description": "Authorized store administrator record.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "email": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "displayName": {
+          "type": "string",
+          "maxLength": 150
+        },
+        "role": {
+          "type": "string",
+          "enum": ["admin", "super_admin"]
+        },
+        "cloudinaryCloudName": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "cloudinaryUploadPreset": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "email", "displayName", "role", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/products/{productId}": {
+      "schema": { "$ref": "Product" },
+      "description": "Store products catalog"
+    },
+    "/orders/{orderId}": {
+      "schema": { "$ref": "Order" },
+      "description": "Customer orders containing PII, strictly restricted to admins after creation"
+    },
+    "/payments/{paymentId}": {
+      "schema": { "$ref": "PaymentRecord" },
+      "description": "Delivery charge advance payment submissions"
+    },
+    "/admins/{adminUid}": {
+      "schema": { "$ref": "AdminUser" },
+      "description": "Authorized store administrators"
+    }
+  }
+}

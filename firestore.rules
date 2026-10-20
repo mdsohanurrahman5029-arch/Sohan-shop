@@ -1,0 +1,292 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 1. GLOBAL SAFETY NET: Default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // =========================================================================
+    // PRIMITIVE HELPERS & SINGLE PERMANENT ADMIN AUTHORIZATION
+    // =========================================================================
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    // Strictly ONE permanent authorized Google Admin account:
+    // mdsohanurrahman5029@gmail.com
+    function isAdmin() {
+      return isVerifiedUser() &&
+        request.auth.token.email is string &&
+        request.auth.token.email.lower() == 'mdsohanurrahman5029@gmail.com';
+    }
+
+    // =========================================================================
+    // ENTITY VALIDATION BLUEPRINTS
+    // =========================================================================
+    function isValidProduct(data) {
+      return data.keys().hasAll([
+        'id', 'name', 'subtitle', 'description', 'category',
+        'regularPrice', 'salePrice', 'discountPercentage',
+        'images', 'thumbnail', 'sizes', 'colors',
+        'stockQuantity', 'stock', 'features',
+        'active', 'position',
+        'insideDhakaDelivery', 'outsideDhakaDelivery',
+        'createdAt', 'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'id', 'name', 'subtitle', 'description', 'category',
+        'regularPrice', 'salePrice', 'discountPercentage',
+        'images', 'thumbnail', 'sizes', 'colors', 'colorImages',
+        'stockQuantity', 'stock', 'features',
+        'active', 'position',
+        'insideDhakaDelivery', 'outsideDhakaDelivery',
+        'createdAt', 'updatedAt'
+      ]) &&
+      isValidId(data.id) &&
+      data.name is string && data.name.size() >= 1 && data.name.size() <= 200 &&
+      data.subtitle is string && data.subtitle.size() <= 500 &&
+      data.description is string && data.description.size() >= 1 && data.description.size() <= 4000 &&
+      data.category is string && data.category.size() >= 1 && data.category.size() <= 100 &&
+      data.regularPrice is number && data.regularPrice >= 0 && data.regularPrice <= 1000000 &&
+      data.salePrice is number && data.salePrice >= 0 && data.salePrice <= 1000000 &&
+      data.discountPercentage is number && data.discountPercentage >= 0 && data.discountPercentage <= 100 &&
+      data.images is list && data.images.size() >= 1 && data.images.size() <= 10 &&
+      data.images[0] is string && data.images[0].size() <= 2000 &&
+      data.thumbnail is string && data.thumbnail.size() >= 1 && data.thumbnail.size() <= 2000 &&
+      data.sizes is list && data.sizes.size() >= 1 && data.sizes.size() <= 10 &&
+      data.sizes[0] is string && data.sizes[0].size() <= 30 &&
+      data.colors is list && data.colors.size() <= 10 &&
+      (data.colors.size() == 0 || (data.colors[0] is string && data.colors[0].size() <= 60)) &&
+      (!('colorImages' in data) || (data.colorImages is map && data.colorImages.size() <= 10)) &&
+      data.stockQuantity is number && data.stockQuantity >= 0 && data.stockQuantity <= 100000 &&
+      data.stock is bool &&
+      data.features is list && data.features.size() <= 10 &&
+      (data.features.size() == 0 || (data.features[0] is string && data.features[0].size() <= 300)) &&
+      data.active is bool &&
+      data.position is number && data.position >= 0 && data.position <= 100000 &&
+      data.insideDhakaDelivery is number && data.insideDhakaDelivery >= 0 && data.insideDhakaDelivery <= 5000 &&
+      data.outsideDhakaDelivery is number && data.outsideDhakaDelivery >= 0 && data.outsideDhakaDelivery <= 5000 &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    function isValidOrder(data) {
+      return data.keys().hasAll([
+        'orderId', 'customerName', 'mobileNumber', 'district', 'fullAddress', 'note',
+        'productId', 'productName', 'unitPrice', 'size', 'color', 'quantity',
+        'deliveryLocation', 'deliveryTypeLabel',
+        'subtotal', 'deliveryCharge', 'grandTotal', 'onlinePaid', 'codAmount',
+        'paymentMethod', 'paymentAccountNumber', 'senderMobile', 'transactionId',
+        'paymentStatus', 'orderStatus', 'stockDeducted',
+        'createdAt', 'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'orderId', 'customerName', 'mobileNumber', 'district', 'fullAddress', 'note',
+        'productId', 'productName', 'unitPrice', 'size', 'color', 'quantity',
+        'deliveryLocation', 'deliveryTypeLabel',
+        'subtotal', 'deliveryCharge', 'grandTotal', 'onlinePaid', 'codAmount',
+        'paymentMethod', 'paymentAccountNumber', 'senderMobile', 'transactionId',
+        'paymentStatus', 'orderStatus', 'stockDeducted',
+        'createdAt', 'updatedAt'
+      ]) &&
+      isValidId(data.orderId) &&
+      data.customerName is string && data.customerName.size() >= 2 && data.customerName.size() <= 150 &&
+      data.mobileNumber is string && data.mobileNumber.size() >= 11 && data.mobileNumber.size() <= 20 &&
+      data.district is string && data.district.size() >= 2 && data.district.size() <= 100 &&
+      data.fullAddress is string && data.fullAddress.size() >= 4 && data.fullAddress.size() <= 1000 &&
+      data.note is string && data.note.size() <= 500 &&
+      isValidId(data.productId) &&
+      data.productName is string && data.productName.size() >= 1 && data.productName.size() <= 200 &&
+      data.unitPrice is number && data.unitPrice >= 0 && data.unitPrice <= 1000000 &&
+      data.size is string && data.size.size() >= 1 && data.size.size() <= 30 &&
+      data.color is string && data.color.size() <= 60 &&
+      data.quantity is number && data.quantity >= 1 && data.quantity <= 100 &&
+      data.deliveryLocation in ['inside_dhaka', 'outside_dhaka'] &&
+      data.deliveryTypeLabel is string && data.deliveryTypeLabel.size() >= 2 && data.deliveryTypeLabel.size() <= 100 &&
+      data.subtotal is number && data.subtotal == data.unitPrice * data.quantity &&
+      data.deliveryCharge is number && data.deliveryCharge in [60, 120] &&
+      data.grandTotal is number && data.grandTotal == data.subtotal + data.deliveryCharge &&
+      data.onlinePaid is number && data.onlinePaid == data.deliveryCharge &&
+      data.codAmount is number && data.codAmount == data.subtotal &&
+      data.paymentMethod in ['bKash', 'Nagad'] &&
+      data.paymentAccountNumber is string && data.paymentAccountNumber.size() >= 11 && data.paymentAccountNumber.size() <= 30 &&
+      data.senderMobile is string && data.senderMobile.size() >= 11 && data.senderMobile.size() <= 20 &&
+      data.transactionId is string && data.transactionId.size() >= 4 && data.transactionId.size() <= 64 &&
+      data.paymentStatus in ['PAYMENT VERIFICATION PENDING', 'PAID', 'REJECTED'] &&
+      data.orderStatus in ['PENDING PAYMENT VERIFICATION', 'CONFIRMED', 'PAYMENT REJECTED', 'DELIVERED', 'CANCELLED'] &&
+      data.stockDeducted is bool &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    function isValidPaymentRecord(data) {
+      return data.keys().hasAll([
+        'paymentId', 'orderId', 'paymentMethod', 'receiverAccount',
+        'senderMobile', 'transactionId', 'amount', 'status',
+        'createdAt', 'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'paymentId', 'orderId', 'paymentMethod', 'receiverAccount',
+        'senderMobile', 'transactionId', 'amount', 'status',
+        'createdAt', 'updatedAt'
+      ]) &&
+      isValidId(data.paymentId) &&
+      isValidId(data.orderId) &&
+      data.paymentMethod in ['bKash', 'Nagad'] &&
+      data.receiverAccount is string && data.receiverAccount.size() >= 11 && data.receiverAccount.size() <= 30 &&
+      data.senderMobile is string && data.senderMobile.size() >= 11 && data.senderMobile.size() <= 20 &&
+      data.transactionId is string && data.transactionId.size() >= 4 && data.transactionId.size() <= 64 &&
+      data.amount is number && data.amount in [60, 120] &&
+      data.status in ['PAYMENT VERIFICATION PENDING', 'PAID', 'REJECTED'] &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    function isValidAdminUser(data) {
+      return data.keys().hasAll(['uid', 'email', 'displayName', 'role', 'createdAt', 'updatedAt']) &&
+      data.keys().hasOnly([
+        'uid', 'email', 'displayName', 'role',
+        'cloudinaryCloudName', 'cloudinaryUploadPreset',
+        'createdAt', 'updatedAt'
+      ]) &&
+      isValidId(data.uid) &&
+      data.uid == request.auth.uid &&
+      data.email is string && data.email.lower() == 'mdsohanurrahman5029@gmail.com' &&
+      data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 150 &&
+      data.role in ['admin', 'super_admin'] &&
+      (!('cloudinaryCloudName' in data) || (data.cloudinaryCloudName is string && data.cloudinaryCloudName.size() <= 120)) &&
+      (!('cloudinaryUploadPreset' in data) || (data.cloudinaryUploadPreset is string && data.cloudinaryUploadPreset.size() <= 120)) &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    // =========================================================================
+    // COLLECTION 1: /products/{productId} (Products & Stock)
+    // =========================================================================
+    match /products/{productId} {
+      // Customers can read active products without logging in; only the single permanent Admin can read inactive products
+      allow get: if isValidId(productId) && (existing().active == true || isAdmin());
+      allow list: if existing().active == true || isAdmin();
+
+      // Strictly ONLY the single permanent Admin can create, update, or delete products & stock
+      allow create: if isAdmin() &&
+        isValidId(productId) &&
+        incoming().id == productId &&
+        isValidProduct(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+
+      allow update: if isAdmin() &&
+        isValidId(productId) &&
+        isValidProduct(incoming()) &&
+        incoming().id == existing().id &&
+        incoming().updatedAt == request.time;
+
+      allow delete: if isAdmin() && isValidId(productId);
+    }
+
+    // =========================================================================
+    // COLLECTION 2: /orders/{orderId}
+    // =========================================================================
+    match /orders/{orderId} {
+      // PII Protection: Customers and non-admin Google accounts can NEVER read/list orders.
+      allow get: if isAdmin() && isValidId(orderId);
+      allow list: if isAdmin();
+
+      // Customers can submit a new order ONLY in PENDING verification state
+      allow create: if isValidId(orderId) &&
+        incoming().orderId == orderId &&
+        isValidOrder(incoming()) &&
+        incoming().paymentStatus == 'PAYMENT VERIFICATION PENDING' &&
+        incoming().orderStatus == 'PENDING PAYMENT VERIFICATION' &&
+        incoming().stockDeducted == false &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        exists(/databases/$(database)/documents/products/$(incoming().productId)) &&
+        get(/databases/$(database)/documents/products/$(incoming().productId)).data.active == true &&
+        get(/databases/$(database)/documents/products/$(incoming().productId)).data.stockQuantity >= incoming().quantity;
+
+      // Strictly ONLY the single permanent Admin can update order/payment status
+      allow update: if isAdmin() &&
+        isValidId(orderId) &&
+        isValidOrder(incoming()) &&
+        incoming().orderId == existing().orderId &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'paymentStatus', 'orderStatus', 'stockDeducted', 'note', 'updatedAt'
+        ]);
+
+      allow delete: if isAdmin() && isValidId(orderId);
+    }
+
+    // =========================================================================
+    // COLLECTION 3: /payments/{paymentId}
+    // =========================================================================
+    match /payments/{paymentId} {
+      allow get: if isAdmin() && isValidId(paymentId);
+      allow list: if isAdmin();
+
+      allow create: if isValidId(paymentId) &&
+        incoming().paymentId == paymentId &&
+        isValidPaymentRecord(incoming()) &&
+        incoming().status == 'PAYMENT VERIFICATION PENDING' &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+
+      allow update: if isAdmin() &&
+        isValidId(paymentId) &&
+        isValidPaymentRecord(incoming()) &&
+        incoming().paymentId == existing().paymentId &&
+        incoming().orderId == existing().orderId &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt']);
+
+      allow delete: if isAdmin() && isValidId(paymentId);
+    }
+
+    // =========================================================================
+    // COLLECTION 4: /admins/{adminUid} (Admin Settings & Single Permanent Admin)
+    // =========================================================================
+    match /admins/{adminUid} {
+      // Strictly ONLY the single permanent Admin (mdsohanurrahman5029@gmail.com) can access or write its own record
+      allow get: if isAdmin() && isValidId(adminUid) && request.auth.uid == adminUid;
+      allow list: if isAdmin();
+
+      allow create: if isAdmin() &&
+        isValidId(adminUid) &&
+        request.auth.uid == adminUid &&
+        isValidAdminUser(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+
+      allow update: if isAdmin() &&
+        isValidId(adminUid) &&
+        request.auth.uid == adminUid &&
+        isValidAdminUser(incoming()) &&
+        incoming().uid == existing().uid &&
+        incoming().email == existing().email &&
+        incoming().updatedAt == request.time;
+
+      allow delete: if false;
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "SOHAN SHOP — Premium Products at Best Price",
+  "description": "সোহাণ শপ (SOHAN SHOP) থেকে প্রিমিয়াম কোয়ালিটির স্টাইলিশ টি-শার্ট অর্ডার করুন সেরা দামে। সারা বাংলাদেশে ক্যাশ অন ডেলিভারি সুবিধা।",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
